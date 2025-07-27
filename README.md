@@ -111,7 +111,7 @@ VITE_SDK_APP_ID=myApp-instance
 VITE_SDK_APP_VERSION=v0.0.1
 
 VITE_SDK_DEMO=demo
-VITE_SDK_SRC_DEVELOPMENT=https://localhost:8080/src/main.js
+VITE_SDK_SRC_MAIN_JS=src/main.js
 ```
 
 - .../my-vue-app/.env.production
@@ -124,7 +124,7 @@ VITE_SDK_APP_ID=myApp-instance
 VITE_SDK_APP_VERSION=v0.0.1
 
 VITE_SDK_DEMO=demo
-VITE_SDK_SRC_DEVELOPMENT=https://localhost:8080/src/main.js
+VITE_SDK_SRC_MAIN_JS=src/main.js
 ```
 
 - .../my-vue-app/src/embed.dev.js
@@ -133,13 +133,13 @@ VITE_SDK_SRC_DEVELOPMENT=https://localhost:8080/src/main.js
 /* eslint-disable no-undef */
 
 const id = process.env.VITE_SDK_NAME;
-const src = process.env.VITE_SDK_SRC_DEVELOPMENT;
+const srcMainJs = process.env.VITE_SDK_SRC_MAIN_JS;
 const mainElement = document.getElementById(id);
 if (mainElement === null || !mainElement) {
   const scriptManifest = document.createElement("script");
   scriptManifest.id = id;
   scriptManifest.type = "module";
-  scriptManifest.src = src;
+  scriptManifest.src = `${new URL(document.currentScript.src).origin}/${srcMainJs}`;
 
   const regexMobileUserAgent =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Phone/i;
@@ -161,42 +161,19 @@ if (mainElement === null || !mainElement) {
 
 import manifest from "../dist/.vite/manifest.json";
 
-const getSrc = (
-  mainJs,
-  findPath,
-  replacePath,
-  sdkEmbedFileName,
-  sdkBuildMetaBaseHost,
-) => {
-  const find = `${findPath}/${sdkEmbedFileName}`;
-  const script = document.querySelector(`script[src*="${find}"]`);
-  if (script && script.src) {
-    return script.src.replace(find, `${replacePath}/${mainJs}`);
-  } else {
-    const scriptPath = document.querySelector(
-      `script[src*="/${sdkEmbedFileName}"]`,
-    );
-    return scriptPath && scriptPath.src
-      ? scriptPath.src
-          .replace(sdkEmbedFileName, mainJs)
-          .replace(new URL(scriptPath.src).search, "")
-      : `${sdkBuildMetaBaseHost}/${mainJs}`;
-  }
-};
-
 const id = process.env.VITE_SDK_NAME;
 const mainElement = document.getElementById(id);
 if (mainElement === null || !mainElement) {
   const scriptManifest = document.createElement("script");
   scriptManifest.id = id;
   scriptManifest.type = "module";
-  scriptManifest.src = getSrc(
-    manifest["src/main.js"].file,
-    "/assets",
-    "/assets",
-    process.env.VITE_SDK_EMBED_NAME,
-    process.env.VITE_SDK_HOST,
-  );
+
+  const { src } = document.currentScript;
+  const search = new URL(src).search;
+  const embedName = process.env.VITE_SDK_EMBED_NAME;
+  const srcMainJs = process.env.VITE_SDK_SRC_MAIN_JS;
+  const mainName = manifest[srcMainJs].file;
+  scriptManifest.src = src.replace(embedName, mainName).replace(search, "");
 
   const regexMobileUserAgent =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Phone/i;
