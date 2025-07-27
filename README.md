@@ -171,8 +171,7 @@ if (mainElement === null || !mainElement) {
   const { src } = document.currentScript;
   const search = new URL(src).search;
   const embedName = process.env.VITE_SDK_EMBED_NAME;
-  const srcMainJs = process.env.VITE_SDK_SRC_MAIN_JS;
-  const mainName = manifest[srcMainJs].file;
+  const mainName = manifest["src/main.js"].file;
   scriptManifest.src = src.replace(embedName, mainName).replace(search, "");
 
   const regexMobileUserAgent =
